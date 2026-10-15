@@ -904,3 +904,19 @@ Each program has its own expected graduate attributes (EGAs) and program outcome
 **Planned work, not implemented:**
 - Program-wide submission deadlines scoped to school year and semester, assignment-aware progress, and faculty notifications/reminders are planned only. Upcoming Deadlines still contains fixed sample entries; no deadline API, persistence or scheduler exists yet.
 - docs/claude-program-deadlines-ui.md contains the UI-first Claude handoff for System-Improvement. It requires isolated mock data and preserves the existing system architecture; it does not authorize real deadline delivery or backend work.
+
+
+---
+
+### Unreleased — Program Deadline UI Prototype
+**Date:** October 15, 2026
+
+- Added Set/Edit Deadline, academic-period selection, View Progress and confirmed Cancel Deadline to each program in Program & Subjects using existing catalog dialogs, buttons and styles.
+- Forms validate school year, semester and Philippine-time date/time, preview program-wide subjects and faculty requirements, preserve input on simulated failures and prevent duplicate saves.
+- Progress counts each assigned faculty/subject pair independently, separates unassigned subjects, and compares the first initial submission against the deadline. Approval and revision schedules do not change submission status; late submission remains allowed.
+- Replaced the dashboard's fixed sample dates with assignment-aware deadline entries and Upcoming, Due Today, Overdue, Submitted and Submitted Late states. Added an isolated notification preview for created, updated, cancelled and reminder events.
+- Added 66 English/Tagalog translation keys, scoped responsive styles and keyboard-accessible modal behavior. Existing dashboard geometry, hidden scrollbar/native scrolling, sidebar and application workflows are preserved.
+- All deadline data uses a replaceable in-memory adapter. The authenticated store starts empty; synthetic faculty/subjects/submissions are confined to `/tests/deadlines-preview.html`. Real period-scoped assignment integration and precise syllabus linking remain deferred and are explicitly documented. No backend persistence, scheduler, email or real notification delivery was implemented.
+- Verification: 474 tests pass with `TZ=Asia/Manila`; 15 new deadline tests also pass in UTC. Localization audit passes with 1,668 bilingual keys and production build passes with the existing bundle-size warning. Chromium interaction checks cover both roles/languages, period isolation, save failure/retry, cancellation, notifications, narrow layout and focus. Screenshots were visually inspected.
+- A full test run in UTC exposes an existing local-date assertion in `complianceView.test.js`; no unrelated date code was changed.
+- Preview instructions, files, limitations and future API contracts: `docs/program-deadlines-ui.md`.

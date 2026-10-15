@@ -1,8 +1,9 @@
+import { UpcomingProgramDeadlines } from '../features/deadlines/DeadlineUI';
 import StableButton, { StableLabel } from '../components/StableButton';
 import { tr } from "../i18n/index.js";
 import { t as translateUI } from "../i18n/index.js";
 import { useMemo, useState } from 'react';
-import { PageHead, Card, Icon, Legend, Progress, QualityMini, Deadline, Donut } from '../components/ui';
+import { PageHead, Card, Icon, Legend, Progress, QualityMini, Donut } from '../components/ui';
 import { afterCleared, describeActivity, groupByDay, readClearedAt, writeClearedAt } from '../lib/activityView';
 import TypewriterText from '../components/TypewriterText';
 
@@ -17,7 +18,7 @@ const STAT_ICONS = {
   'Submitted Syllabi': 'paperPlaneTilt',
 };
 
-export default function Dashboard({ setPage, user, syllabi, logs, clearLogs, setConfirm }) {
+export default function Dashboard({ setPage, onDeadlineNavigate, user, syllabi, logs, clearLogs, setConfirm }) {
   const my = useMemo(() => syllabi.filter(s => s.userId === user.id), [syllabi, user]);
   const isFac = user.role === 'faculty';
   const data = isFac ? my : syllabi;
@@ -106,8 +107,9 @@ export default function Dashboard({ setPage, user, syllabi, logs, clearLogs, set
           }
         </Card>
         <Card title={translateUI("ui.ai_quality_snapshot_c296aa")}><QualityMini label={translateUI("ui.format_041a5d")} value={compliance || 0} /><QualityMini label={translateUI("ui.completeness_778184")} value={compliance || 0} /><QualityMini label={translateUI("ui.co_po_9c8106")} value={compliance || 0} /><QualityMini label={translateUI("ui.assessment_ef136f")} value={compliance || 0} /></Card>
-        <Card title={translateUI("ui.upcoming_deadlines_b56518")} hideScrollbar><Deadline day="05" mon={tr("SEP")} title={translateUI("ui.department_syllabus_submission_e11d1e")} note={translateUI("ui.5_days_remaining_8ac5f5")} /><Deadline day="12" mon={tr("SEP")} title={translateUI("ui.program_chair_review_deadline_31a12f")} note={translateUI("ui.12_days_remaining_650a54")} /><Deadline day="18" mon={tr("SEP")} title={translateUI("ui.dean_approval_deadline_addb1a")} note={translateUI("ui.18_days_remaining_fdeccb")} /></Card>
+        <Card title={translateUI("ui.upcoming_deadlines_b56518")} hideScrollbar><UpcomingProgramDeadlines user={user} setPage={onDeadlineNavigate || setPage} /></Card>
       </section>
     </>
   );
 }
+

@@ -1,0 +1,7 @@
+.deadline-preview-controls { position: relative; z-index: 31; }
+@media (max-width: 700px) {
+  /* Inspect feature surfaces on a phone independently of the existing desktop shell. */
+  .app-shell > .sidebar { display: none; }
+  .app-shell > .workspace { margin-left: 0; width: 100%; }
+  .app-shell .topbar { display: none; }
+}

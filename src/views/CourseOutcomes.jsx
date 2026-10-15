@@ -87,7 +87,7 @@ export default function CourseOutcomes({ notify, onCatalogChanged }) {
           <div className="ac-actions"><StableButton className="btn outline" disabled={busy || formMotion.closing} onClick={() => formMotion.dismiss(() => { setAdding(false); setForm(blank); setFormError(''); })}>{translateUI("ui.cancel_77dfd2")}</StableButton><StableButton className="btn primary" disabled={!canAdd || formMotion.closing} onClick={addCourse}>{busy ? translateUI("ui.adding_ffb2e6") : translateUI("ui.add_subject_f3ceb3")}</StableButton></div>
         </div>
       )}
-      <ProgramManagement programs={programs} onChanged={refreshCatalog} notify={notify} />
+      <ProgramManagement programs={programs} subjects={list} onChanged={refreshCatalog} notify={notify} />
       <div className="card table-card">
         <div className="sm-toolbar">
           <label className="field"><span>{translateUI("ui.program_9d6800")}</span>
@@ -113,3 +113,4 @@ export default function CourseOutcomes({ notify, onCatalogChanged }) {
     </div>
   );
 }
+

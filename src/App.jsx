@@ -1,3 +1,4 @@
+import { DeadlineProvider } from './features/deadlines/DeadlineProvider';
 import { installLocalizedValidation } from './i18n/validation';
 import { tr } from "./i18n/index.js";
 import { t as translateUI } from "./i18n/index.js";
@@ -359,12 +360,13 @@ export default function App() {
   if (user.role === 'student') return <StudentHome user={user} onLogout={handleLogout} />;
 
   return (
+    <DeadlineProvider key={user.id}>
     <div ref={languageShell} className="app-shell" data-sidebar-collapsed={sidebarCollapsed ? 'true' : 'false'}>
       <Sidebar page={page} setPage={(p) => { if (NEW_BUILDER && p === 'builder') setEditing(null); setPage(p); }} nav={nav} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />
       <main className="workspace">
         <Topbar page={page} onLogout={handleLogout} user={user} unread={unread} threads={threads} msgDrop={msgDrop} setMsgDrop={setMsgDrop} setChatCode={setChatCode} markRead={markRead} notify={notify} onAvatarChange={handleAvatarChange} notifications={notifications} onOpenNotification={openNotification} onMarkAllNotificationsRead={markAllNotificationsRead} />
         <div className="page-wrap">
-          {page === 'dashboard' && <Dashboard setPage={setPage} user={user} syllabi={syllabi} logs={logs} clearLogs={clearLogs} setConfirm={setConfirm} />}
+          {page === 'dashboard' && <Dashboard setPage={setPage} onDeadlineNavigate={next => { if (next === 'builder') setEditing(null); setPage(next); }} user={user} syllabi={syllabi} logs={logs} clearLogs={clearLogs} setConfirm={setConfirm} />}
           {page === 'builder' && ((NEW_BUILDER || user.role === 'admin')
             ? <SyllabusBuilderV2 key={editing ? editing.syllabusId : 'new'} editing={editing} user={user} notify={notify} setPage={setPage} onSubmitted={handleBuilderSubmitted} />
             : <SyllabusBuilder notify={notify} onSubmit={submitSyllabus} editing={editing} setEditing={setEditing} />)}
@@ -397,5 +399,7 @@ export default function App() {
       })()}
       {confirm && <ConfirmModal {...confirm} onClose={() => setConfirm(null)} />}
     </div>
+    </DeadlineProvider>
   );
 }
+

@@ -1,8 +1,9 @@
+import { deadlinesEn, deadlinesTl } from './deadlines.js';
 import { getLanguage, getLocale } from './store.js';
 import { en as baseEn, tl as baseTl } from './messages.js';
 import { extraEn, extraTl } from './extra.js';
-const en = { ...baseEn, ...extraEn };
-const tl = { ...baseTl, ...extraTl };
+const en = { ...baseEn, ...extraEn, ...deadlinesEn };
+const tl = { ...baseTl, ...extraTl, ...deadlinesTl };
 export { getLanguage, getLocale, setLanguage, subscribeLanguage, normalizeLanguage } from './store.js';
 export const dictionaries = { en, tl };
 export function translate(key, values = {}, language = getLanguage()) {
@@ -54,3 +55,4 @@ export function labelVariants(message) {
   if (!key) return [message];
   return [...new Set(['en', 'tl'].map(language => translate(key, {}, language).trim()))];
 }
+

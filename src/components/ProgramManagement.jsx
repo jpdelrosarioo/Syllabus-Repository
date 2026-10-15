@@ -1,3 +1,4 @@
+import { ProgramDeadlineActions } from '../features/deadlines/DeadlineUI';
 import CatalogModalPortal from './CatalogModalPortal';
 import { useActionExit, useCatalogMotion, useSurfaceMotion } from '../lib/catalogMotion';
 import { useEffect, useRef, useState } from 'react';
@@ -94,7 +95,7 @@ export function ProgramDialog({ program, mode, onClose, onComplete, onReload }) 
     </section>
   </div></CatalogModalPortal>;
 }
-export default function ProgramManagement({ programs, onChanged, notify }) {
+export default function ProgramManagement({ programs, subjects = [], onChanged, notify }) {
   const [selected, setSelected] = useState(null);
   const [refreshError, setRefreshError] = useState('');
   const heading = useRef(null);
@@ -113,9 +114,10 @@ export default function ProgramManagement({ programs, onChanged, notify }) {
       {programs.map(program => <tr key={program.id} data-catalog-row={'program-' + program.id}><td className="mono">{program.code}</td><td>{program.name}</td><td><div className="program-management-actions">
         <StableButton className="btn outline" type="button" aria-label={t('programs.renameTitle', { code: program.code })} onClick={() => setSelected({ program, mode: 'rename' })}>{t('programs.rename')}</StableButton>
         <StableButton className="btn danger" type="button" aria-label={t('programs.deleteTitle', { code: program.code })} onClick={() => setSelected({ program, mode: 'delete' })}>{t('programs.delete')}</StableButton>
-      </div></td></tr>)}
+      </div><ProgramDeadlineActions program={program} subjects={subjects.filter(s => s.programId === program.id || s.program === program.code).map(s => ({ ...s, programId: program.id }))} /></td></tr>)}
       {!programs.length && <tr><td colSpan="3">{t('programs.empty')}</td></tr>}
     </tbody></table></div>
     {selected && <ProgramDialog key={selected.program.id + selected.mode} {...selected} onClose={() => setSelected(null)} onComplete={complete} onReload={onChanged} />}
   </section>;
 }
+
