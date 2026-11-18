@@ -27,6 +27,7 @@ import { useNotificationPolling, usePeriodicRefresh } from './lib/usePolling';
 import { recordAvatar, seedAvatars } from './lib/avatarStore';
 import { useActiveTime } from './lib/useActiveTime';
 import AIChecker from './views/AIChecker';
+import SyllabusGenerator from './views/SyllabusGenerator';
 import Analytics from './views/Analytics';
 import Compliance from './views/Compliance';
 import CourseOutcomes from './views/CourseOutcomes';
@@ -36,7 +37,7 @@ import Reports from './views/Reports';
 import Repository from './views/Repository';
 import ReviewApproval from './views/ReviewApproval';
 import Settings from './views/Settings';
-import StudentHome from './views/StudentHome';
+import { StudentDashboard, StudentSyllabi } from './views/StudentViews';
 import SyllabusBuilder from './views/SyllabusBuilder';
 import UsersRoles from './views/UsersRoles';
 import SyllabusBuilderV2 from './views/builder2';
@@ -104,7 +105,7 @@ export default function App() {
   // The compliance check moved into step 7 of the builder: an old 'ai' link sends faculty there, and only admins have the overview.
   useEffect(() => { if (user && !isReviewer(user.role) && user.role !== 'faculty' && page === 'ai') setPage('dashboard'); }, [user, page]);
   // Only faculty and the administrator write syllabi: whatever leads a reviewer (Asst. VPAA, LIC Director, VPAA) to the builder or My Syllabi, they land on the dashboard.
-  useEffect(() => { if (user && !canAuthor(user.role) && (page === 'builder' || page === 'my-syllabi')) setPage('dashboard'); }, [user, page]);
+  useEffect(() => { if (user && !canAuthor(user.role) && (page === 'builder' || page === 'my-syllabi' || page === 'generator')) setPage('dashboard'); }, [user, page]);
   const [toast, setToast] = useState('');
   const [syllabi, setSyllabi] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -199,7 +200,7 @@ export default function App() {
   useEffect(() => { if (user && page === 'dashboard' && user.role !== 'student' && !user.mustChangePassword) fetchLogs(); }, [user, page, fetchLogs]);
   // The list says which submissions the administrator has checked: read it again when they open Review & Approval, so a check just made shows.
   useEffect(() => { if (user && isReviewer(user.role) && (page === 'review' || page === 'ai')) fetchSyllabi(); }, [user, page, fetchSyllabi]);
-  useEffect(() => { if (user && page === 'my-syllabi') { fetchSyllabi(); if (user.role === 'faculty') fetchCommentCounts(); } }, [user, page, fetchSyllabi, fetchCommentCounts]);
+  useEffect(() => { if (user && (page === 'my-syllabi' || page === 'generator')) { fetchSyllabi(); if (user.role === 'faculty') fetchCommentCounts(); } }, [user, page, fetchSyllabi, fetchCommentCounts]);
 
   // Other people's new profile pictures arrive with the syllabus list and the message partners: read both again now and then, and when the tab comes back.
   usePeriodicRefresh(!!user && user.role !== 'student' && !user.mustChangePassword && !loggingOut, () => { fetchSyllabi(); fetchMessages(); });
@@ -397,22 +398,27 @@ export default function App() {
   };
 
 
-  const nav = navItems.filter(([, , , r]) => roleAllows(r, user?.role));
+  const isStudent = user?.role === 'student';
+  // A student has their own pages inside the same shell; everyone else's navigation never lists them.
+  const studentPage = isStudent ? (String(page).startsWith('student-') ? page : 'student-dashboard') : page;
+  const nav = navItems.filter(([, , , r]) => (isStudent ? r === 'student' : roleAllows(r, user?.role)));
 
   if (loggingOut) return <div className="loading-screen" role="status" aria-live="polite" aria-busy="true"><div className="spinner" aria-hidden="true" /><p>{translateUI("ui.logging_out_3df779")}</p></div>;
   if (loading) return <div className="loading-screen"><div className="spinner" /><p>{translateUI("ui.loading_b04ba4")}</p></div>;
   if (!user) return <Login onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} />;
   if (user.mustChangePassword) return <ChangePassword user={user} onDone={() => setUser((u) => ({ ...u, mustChangePassword: false }))} onLogout={handleLogout} />;
-  if (user.role === 'student') return <StudentHome user={user} onLogout={handleLogout} />;
 
   return (
     <AcademicYearContext.Provider value={yearScope}>
-    <div ref={languageShell} className="app-shell" data-sidebar-collapsed={sidebarCollapsed ? 'true' : 'false'} data-page={page}>
-      {!narrow && <Sidebar page={page} setPage={(p) => { if (NEW_BUILDER && p === 'builder') setEditing(null); setPage(p); }} nav={nav} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />}
-      <main className="workspace" data-page={page}>
-        <Topbar page={page} onLogout={handleLogout} user={user} unread={unread} threads={threads} msgDrop={msgDrop} setMsgDrop={setMsgDrop} setChatCode={setChatCode} markRead={markRead} notify={notify} onAvatarChange={handleAvatarChange} notifications={notifications} onOpenNotification={openNotification} onMarkAllNotificationsRead={markAllNotificationsRead} syllabi={syllabi} nav={nav} onOpenSyllabus={setViewCode} onGoPage={(p) => { if (NEW_BUILDER && p === 'builder') setEditing(null); setPage(p); }} />
-        {narrow && <MobileNav page={page} setPage={(p) => { if (NEW_BUILDER && p === 'builder') setEditing(null); setPage(p); setMobileNavOpen(false); }} nav={nav} open={mobileNavOpen} onToggle={() => setMobileNavOpen(o => !o)} />}
+    <div ref={languageShell} className="app-shell" data-sidebar-collapsed={sidebarCollapsed ? 'true' : 'false'} data-page={studentPage}>
+      {!narrow && <Sidebar page={studentPage} setPage={(p) => { if (NEW_BUILDER && p === 'builder') setEditing(null); setPage(p); }} nav={nav} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />}
+      <main className="workspace" data-page={studentPage}>
+        <Topbar page={studentPage} onLogout={handleLogout} user={user} unread={unread} threads={threads} msgDrop={msgDrop} setMsgDrop={setMsgDrop} setChatCode={setChatCode} markRead={markRead} notify={notify} onAvatarChange={handleAvatarChange} notifications={notifications} onOpenNotification={openNotification} onMarkAllNotificationsRead={markAllNotificationsRead} />
+        {narrow && <MobileNav page={studentPage} setPage={(p) => { if (NEW_BUILDER && p === 'builder') setEditing(null); setPage(p); setMobileNavOpen(false); }} nav={nav} open={mobileNavOpen} onToggle={() => setMobileNavOpen(o => !o)} />}
         <div className={`page-wrap ${page === 'dashboard' ? 'page-wrap-dashboard' : ''}`}>
+          {isStudent && studentPage === 'student-dashboard' && <StudentDashboard user={user} setPage={setPage} />}
+          {isStudent && studentPage === 'student-syllabi' && <StudentSyllabi />}
+          {!isStudent && (<>
 
           {page === 'dashboard' && <Dashboard setPage={setPage} user={user} syllabi={syllabi} logs={logs} onNewSyllabus={() => { setEditing(null); setPage('builder'); }} />}
           {page === 'builder' && canAuthor(user.role) && ((NEW_BUILDER || user.role === 'admin')
@@ -421,6 +427,7 @@ export default function App() {
           {page === 'my-syllabi' && canAuthor(user.role) && <MySyllabi syllabi={syllabi} user={user} messages={messages} commentCounts={commentCounts} setCommentCode={setCommentCode} setEditing={setEditing} setPage={setPage} setHistCode={setHistCode} setChatCode={setChatCode} handleDelete={handleDelete} setConfirm={setConfirm} notify={notify} />}
           {page === 'ai' && (isReviewer(user.role) || user.role === 'faculty') && <AIChecker user={user} syllabi={syllabi} editing={editing} setEditing={setEditing} setPage={setPage} notify={notify} onSubmitted={handleBuilderSubmitted} onApproved={async () => { await fetchSyllabi(); await fetchLogs(); notify(translateUI('publication.approvedRepository')); setEditing(null); setPage('my-syllabi'); }} onEditDraft={async id => { await syllabiApi.resumeDraft(id); setEditing({ syllabusId: id, status: 'draft' }); setPage('builder'); }} onChanged={fetchSyllabi} />}
           {page === 'review' && <ReviewApproval syllabi={syllabi} user={user} setViewCode={setViewCode} setPage={setPage} />}
+          {page === 'generator' && canAuthor(user.role) && <SyllabusGenerator user={user} syllabi={syllabi} editing={editing} setEditing={setEditing} setPage={setPage} onChanged={fetchSyllabi} />}
           {page === 'repository' && <Repository syllabi={syllabi} user={user} notify={notify} setHistCode={setHistCode} />}
           {page === 'compliance' && <Compliance syllabi={syllabi} />}
           {page === 'analytics' && <Analytics syllabi={syllabi} user={user} />}
@@ -428,6 +435,7 @@ export default function App() {
           {page === 'users' && <UsersRoles notify={notify} onManageSubjects={() => setPage('courses')} />}
           {page === 'courses' && user.role === 'admin' && <CourseOutcomes notify={notify} onCatalogChanged={() => { fetchSyllabi(); fetchLogs(); fetchMessages(); fetchNotifications(); }} />}
           {page === 'settings' && <Settings user={user} notify={notify} onAvatarChange={handleAvatarChange} onProfileChange={handleProfileChange} language={language} languageBusy={languageBusy} onLanguageChange={changeLanguage} />}
+          </>)}
         </div>
       </main>
       {toast && <div className="toast">{tr(toast)}</div>}
